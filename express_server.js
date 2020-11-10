@@ -1,9 +1,18 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
+const bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com",
+};
+
+
+//++++++++++++++FUNCTIONS THAT DIDNT LIKE BEING MODDED+++++++++++++++
 function generateRandomString() {
   let url = "";
   const length = 6;
@@ -23,23 +32,13 @@ const findKeyByValue = function(obj, value) {
 return result;
 }
 
+
+//++++++++++++++GET routes++++++++++++++++++
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-};
-
-const bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({extended: true}));
-
-app.post("/urls", (req, res) => {
-  urlDatabase[generateRandomString()]= req.body;
-  let result = findKeyByValue(urlDatabase, req.body)
-  res.send(result);
-});
 
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase.hasOwnProperty(req.params.shortURL)){
@@ -68,14 +67,20 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// ++++++++++++++++++++POST routes+++++++++++++++++++++
 
-// app.get("/", (req, res) => {
-//   res.send("Hello!");
-// });
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+});
 
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
+app.post("/urls", (req, res) => {
+  let shortURL = generateRandomString();
+  let longURL = req.body.longURL;
+  urlDatabase[shortURL] = longURL
+  let result = findKeyByValue(urlDatabase, req.body)
+  res.redirect("/urls");
+});
 
 
 app.listen(PORT, () => {
