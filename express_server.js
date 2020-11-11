@@ -8,11 +8,21 @@ app.use(cookieParser());
 
 app.set("view engine", "ejs");
 
+
+
+//++++++++++++++++DATABASE++++++++++++++++++++++++
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {
+  "userRandomID": {
+  id: "",
+  email: "",
+  password: "",
+},
+}
 
 //++++++++++++++FUNCTIONS THAT DIDNT LIKE BEING MODDED+++++++++++++++
 function generateRandomString() {
@@ -31,6 +41,9 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+app.get("/register", (req, res) => {
+  res.render("register")
+})
 
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase.hasOwnProperty(req.params.shortURL)){
@@ -67,6 +80,7 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+
 // ++++++++++++++++++++POST routes+++++++++++++++++++++
 
 
@@ -97,7 +111,18 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 })
 
+app.post("/register", (req, res) => {
+  let id = generateRandomString();
+  users.id = {
+    "id": id,
+    email: req.body.email,
+    password: req.body.password,
+  }
+  res.cookie("username", req.body.email);
+  res.redirect("/urls");
+})
 
+//++++++++++++++++Listening++++++++++++++++++++++
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
