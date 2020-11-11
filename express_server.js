@@ -60,10 +60,8 @@ app.get("/u/:shortURL", (req, res) => {
 // ++++++++++++++++++++POST routes+++++++++++++++++++++
 
 
-app.post("/urls/:id/edit", (req, res) => {
-  let current = urlDatabase[req.params.id]
-  console.log(req.body)
-  current = req.body;
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL
   res.redirect('/urls');
 })
 
