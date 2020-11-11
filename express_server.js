@@ -22,16 +22,6 @@ function generateRandomString() {
   return url;
 }
 
-const findKeyByValue = function(obj, value) {
-  let result = ""; 
-  for (let i in obj) {
-    if (obj[i] === value) {
-      result = i;
-    }
-  } 
-return result;
-}
-
 
 //++++++++++++++GET routes++++++++++++++++++
 
@@ -58,7 +48,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
-  res.redirect(longURL)
+  let longURL = urlDatabase[req.params.shortURL];
   res.render("urls_show", templateVars);
 });
 
@@ -69,6 +59,14 @@ app.get("/u/:shortURL", (req, res) => {
 
 // ++++++++++++++++++++POST routes+++++++++++++++++++++
 
+
+app.post("/urls/:id/edit", (req, res) => {
+  let current = urlDatabase[req.params.id]
+  console.log(req.body)
+  current = req.body;
+  res.redirect('/urls');
+})
+
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
@@ -78,7 +76,6 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL
-  let result = findKeyByValue(urlDatabase, req.body)
   res.redirect("/urls");
 });
 
