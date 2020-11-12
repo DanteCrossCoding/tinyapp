@@ -131,6 +131,12 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password
+
+  if (!email || !password) {
+    return res.status(400).send("Email and Password required");
+  }
   
    const userID = findEmail(req.body.email)
      if (userID) {
@@ -140,6 +146,7 @@ app.post("/login", (req, res) => {
 })
 
 app.post("/logout", (req, res) => {
+  
   res.clearCookie("user_id", req.body)
   res.redirect("/urls");
 })
