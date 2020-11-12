@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcrypt');
 const app = express();
 const PORT = 8080;
 app.use(bodyParser.urlencoded({extended: true}));
@@ -23,11 +24,11 @@ const users = {
   email: "something@this.com",
   password: "12345",
 },
-  "af8ej5": {
-    id: "af8ej5",
-    email: "something@that.com",
-    password: "54321",
-  }
+//   "af8ej5": {
+//     id: "af8ej5",
+//     email: "something@that.com",
+//     password: "54321",
+//   }
 }
 
 //++++++++++++++FUNCTIONS THAT DIDNT LIKE BEING MODDED+++++++++++++++
@@ -160,8 +161,13 @@ app.post("/urls/:id", (req, res) => {
 })
 //----------
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
+  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL].userID) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
+
 });
 //------------
 app.post("/urls", (req, res) => {
@@ -171,31 +177,7 @@ app.post("/urls", (req, res) => {
   res.redirect("/urls");
 });
 //-------------
-app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password
-  let thisCheck = checkUserPassword(req.body.email)
 
-  if (!email || !password) {
-    return res.status(400).send("Email and Password required");
-  }
-   
-   if (email && password !== thisCheck)
-     return res.status(400).send("Incorrect email or password");
-
-   const userID = findEmail(req.body.email)
-     if (userID) {
-    res.cookie("user_id", userID);
-     }
-  res.redirect("urls");
-})
-//---------------
-app.post("/logout", (req, res) => {
-  
-  res.clearCookie("user_id", req.body)
-  res.redirect("/urls");
-})
-//----------------
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
@@ -205,18 +187,46 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     return res.status(400).send("Email and Password required");
   }
-
+  
   for (let id in users) {
     if (email === users[id].email) {
       return res.status(400).send("Email already registered");
     }
   }
-  const user = { id, email, password,};
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+  const user = { id, email, password: hashedPassword,};
   users[id] = user
   
   res.cookie("user_id", id);
   res.redirect("/urls");
 })
+//-------------------------
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const userID = findEmail(req.body.email)
+
+  let thisCheck = checkUserPassword(req.body.email)
+
+  if (!email || !req.body.password) {
+    return res.status(400).send("Email and Password required");
+  }
+   
+   if (email && bcrypt.compareSync(req.body.password, thisCheck)) {
+     res.cookie("user_id", userID);
+     res.redirect("urls"); 
+
+    } else {
+    return res.status(400).send("Incorrect email or password");
+    }
+})
+//---------------
+app.post("/logout", (req, res) => {
+  
+  res.clearCookie("user_id", req.body)
+  res.redirect("/urls");
+})
+//----------------
+
 
 
 //++++++++++++++++Listening++++++++++++++++++++++
