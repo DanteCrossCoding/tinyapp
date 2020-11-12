@@ -17,10 +17,10 @@ const urlDatabase = {
 };
 
 const users = {
-  "userRandomID": {
-  id: "",
-  email: "",
-  password: "",
+  "sda7f": {
+  id: "sda7f",
+  email: "something@this.com",
+  password: "12345",
 },
 }
 
@@ -34,6 +34,15 @@ function generateRandomString() {
   return url;
 }
 
+const findEmail = function(email) {
+  for (let user in users) {
+    if (email === users[user].email) {
+      return users[user].id;
+    }
+  }
+}
+
+
 
 //++++++++++++++GET routes++++++++++++++++++
 
@@ -42,7 +51,13 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("register")
+  const data = req.cookies["user_id"];
+  const user = users[data];
+  const templateVars = {
+    user: user,
+  }
+
+  res.render("register", templateVars)
 })
 
 app.get("/u/:shortURL", (req, res) => {
@@ -53,22 +68,28 @@ app.get("/u/:shortURL", (req, res) => {
 })
 
 app.get("/urls", (req, res) => {
+  const data = req.cookies["user_id"];
+  const user = users[data];
   const templateVars = { 
-    username: req.cookies["username"],
+    user: user,
     urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
+  const data = req.cookies["user_id"];
+  const user = users[data];
   const templateVars = {
-    username: req.cookies["username"],
+    user: user,
   }
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  const data = req.cookies["user_id"];
+  const user = users[data];
   const templateVars = { 
-    username: req.cookies["username"],
+    user: user,
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL]};
   let longURL = urlDatabase[req.params.shortURL];
@@ -80,6 +101,14 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+app.get("/login", (req, res) => {
+  const data = req.cookies["user_id"];
+  const user = users[data];
+  const templateVars = {
+    user: user,
+  }
+  res.render("login", templateVars);
+})
 
 // ++++++++++++++++++++POST routes+++++++++++++++++++++
 
@@ -102,25 +131,43 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
+  
+   const userID = findEmail(req.body.email)
+     if (userID) {
+    res.cookie("user_id", userID);
+     }
+  res.redirect("urls");
 })
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username", req.body)
+  res.clearCookie("user_id", req.body)
   res.redirect("/urls");
 })
 
 app.post("/register", (req, res) => {
-  let id = generateRandomString();
-  users.id = {
-    "id": id,
-    email: req.body.email,
-    password: req.body.password,
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password
+  
+  
+  if (!email || !password) {
+    return res.status(400).send("Email and Password required");
   }
-  res.cookie("username", req.body.email);
+
+  for (let id in users) {
+    if (email === users[id].email) {
+      return res.status(400).send("Email already registered");
+    }
+  }
+  const user = { id, email, password,};
+  users[id] = user
+  
+  res.cookie("user_id", id);
+  
+  // console.log()
   res.redirect("/urls");
 })
+
 
 //++++++++++++++++Listening++++++++++++++++++++++
 app.listen(PORT, () => {
