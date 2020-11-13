@@ -15,7 +15,7 @@
             <input type="submit" value="Login"> </form></td>
           <% } else { %>
           <form class="button" action="/logout" method="POST">
-            <label for="user_id">Logged in as: <%= user.email %></label>
+            <label for="user">Logged in as: <%= user.email %></label>
           <td><button type="submit">Logout</button></td>
           <% } %>
         </form>
